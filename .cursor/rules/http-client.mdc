@@ -1,0 +1,36 @@
+---
+description: Padrões para comunicação HTTP entre microsserviços
+globs:
+  - "**/Application/**/*.cs"
+---
+
+# HttpClient entre Microsserviços
+
+## Registro
+
+- Sempre usar IHttpClientFactory — NUNCA instanciar HttpClient direto
+- Registrar no Program.cs com nome:
+
+```csharp
+builder.Services.AddHttpClient("EstoqueApi", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:Estoque"]);
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+```
+
+## Uso
+
+- Injetar IHttpClientFactory no construtor
+- Criar o client nomeado: factory.CreateClient("EstoqueApi")
+
+## Configuração externa
+
+- URL do serviço vem do appsettings.json (não hardcoded)
+- Em docker-compose, usar nome do container como host
+
+## Tratamento de falha
+
+- Envolver chamadas em try/catch de HttpRequestException
+- Retornar Result.Failure com mensagem amigável
+- Log do erro antes de retornar a falha

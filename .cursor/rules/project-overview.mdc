@@ -1,0 +1,35 @@
+---
+description: Visão geral do projeto Korp
+alwaysApply: true
+---
+
+# Projeto: Korp ERP — Sistema de Emissão de Notas Fiscais
+
+## O que é
+
+Sistema com arquitetura de microsserviços para emissão e controle de Notas Fiscais,
+com gerenciamento de estoque de produtos.
+
+## Microsserviços
+
+- **Estoque.Api** (porta 5001): gerencia produtos e seus saldos
+- **Faturamento.Api** (porta 5002): gerencia notas fiscais e aciona o Estoque na impressão
+
+## Frontend
+
+- Angular (porta 4200), consome as duas APIs via HTTP
+
+## Banco de dados
+
+- PostgreSQL com dois bancos separados: `db_estoque` e `db_faturamento`
+- ORM: Entity Framework Core com Migrations
+
+## Comunicação entre serviços
+
+- Faturamento chama Estoque via HTTP (IHttpClientFactory)
+- Não há mensageria neste projeto (decisão consciente de simplicidade)
+
+## Repositório
+
+- Nome: Korp_Teste_GustavoResende
+- Monorepo com pastas separadas por serviço

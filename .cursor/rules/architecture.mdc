@@ -1,0 +1,47 @@
+---
+description: Regras de arquitetura e camadas do projeto
+alwaysApply: true
+---
+
+# Arquitetura: Clean Architecture
+
+## Camadas e responsabilidades
+
+### Domain
+
+- Entidades: classes POCO com propriedades e regras de negócio puras
+- Sem dependência de nenhum framework
+- Sem atributos do EF Core aqui
+
+### Application
+
+- Casos de uso (podem ser Services simples ou Commands/Queries com MediatR)
+- Interfaces dos repositórios (IRepository<T>)
+- DTOs de entrada e saída
+- Validações com FluentValidation
+- Result pattern para retornos
+
+### Infrastructure
+
+- Implementação dos repositórios
+- DbContext e configurações do EF Core (IEntityTypeConfiguration<T>)
+- Migrations
+- HttpClient para comunicação entre serviços
+
+### Api (Presentation)
+
+- Controllers herdando de ControllerBase com [ApiController] e [Route]
+- Injeção de dependência no Program.cs
+- Apenas orquestra: recebe request → chama Application → retorna IActionResult
+
+## Regra de dependência
+
+Domain ← Application ← Infrastructure
+Domain ← Application ← Api
+NUNCA: Domain depende de Infrastructure ou Api
+
+## Proibido
+
+- Lógica de negócio no controller/endpoint
+- Acesso ao DbContext diretamente no endpoint
+- new() para instanciar serviços (usar DI)

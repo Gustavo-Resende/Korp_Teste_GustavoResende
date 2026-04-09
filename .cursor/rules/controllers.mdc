@@ -1,0 +1,68 @@
+---
+description: Padrões para Controllers da API
+globs:
+  - "**/Controllers/**/*.cs"
+---
+
+# Controllers
+
+## Estrutura
+
+- Herdar de ControllerBase
+- Usar atributos [ApiController] e [Route("api/[controller]")]
+- Um controller por entidade: ProdutosController, NotasFiscaisController
+- Controllers APENAS orquestram — sem lógica de negócio
+
+## Exemplo
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProdutosController : ControllerBase
+{
+    private readonly IProdutoService _service;
+
+    public ProdutosController(IProdutoService service)
+    {
+        _service = service;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Criar(
+        CriarProdutoRequest request,
+        CancellationToken ct)
+    {
+        var result = await _service.CriarAsync(request, ct);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken ct)
+    {
+        var result = await _service.GetByIdAsync(id, ct);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+}
+```
+
+## HTTP Status Codes
+
+- Ok(200): leitura com sucesso
+- CreatedAtAction(201): recurso criado
+- BadRequest(400): erro de validação ou regra de negócio
+- NotFound(404): recurso não encontrado
+- StatusCode(503): microsserviço dependente fora do ar
+
+## Validação
+
+- FluentValidation registrado no DI
+- Validar no service, não no controller
+- [ApiController] já retorna 400 automático para model binding inválido
+
+## Proibido
+
+- Lógica de negócio no controller
+- Acesso ao DbContext diretamente no controller
+- Retornar tipos concretos — sempre IActionResult

@@ -1,0 +1,34 @@
+---
+description: Convenções de código C# para o projeto Korp
+globs:
+  - "**/*.cs"
+---
+
+# Convenções C#
+
+## Nomenclatura
+
+- Classes, métodos, propriedades: PascalCase
+- Variáveis locais, parâmetros: camelCase
+- Campos privados: _camelCase (com underscore)
+- Interfaces: prefixo I (ex: IProdutoRepository)
+- Async methods: sufixo Async (ex: GetByIdAsync)
+
+## Boas práticas
+
+- Sempre usar async/await — nunca .Result ou .Wait()
+- Sempre passar CancellationToken em métodos async
+- Usar record para DTOs imutáveis
+- Usar var quando o tipo é óbvio
+- Prefira early return a if/else aninhados
+
+## Documentação
+
+- Comentários em português (pt-BR)
+- Apenas comentar o "porquê", não o "o quê"
+
+## Proibido
+
+- Métodos com mais de 30 linhas sem justificativa
+- Magic numbers — use constantes
+- catch (Exception ex) genérico sem tratamento adequado

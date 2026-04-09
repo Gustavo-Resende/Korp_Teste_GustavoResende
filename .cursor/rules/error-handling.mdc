@@ -1,0 +1,45 @@
+---
+description: Tratamento de erros e Result pattern
+globs:
+  - "**/*.cs"
+---
+
+# Tratamento de Erros
+
+## Result Pattern
+
+- Usar Result<T> para retornos de serviços (evita exceptions para controle de fluxo)
+- Estrutura mínima:
+
+```csharp
+public class Result<T>
+{
+    public bool IsSuccess { get; }
+    public T? Value { get; }
+    public string? Error { get; }
+
+    private Result(T value) { IsSuccess = true; Value = value; }
+    private Result(string error) { IsSuccess = false; Error = error; }
+
+    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Failure(string error) => new(error);
+}
+```
+
+## Cenário de falha entre microsserviços
+
+- Quando Estoque estiver fora do ar, Faturamento deve:
+  1. Capturar a HttpRequestException
+  2. Retornar Result.Failure com mensagem clara
+  3. O endpoint retorna 503 com ProblemDetails
+
+## ProblemDetails
+
+- Usar Results.Problem() nos endpoints para erros inesperados
+- Incluir: title, detail, status
+
+## Proibido
+
+- Deixar exception não tratada chegar ao cliente
+- Retornar stack trace em produção
+- Usar exceptions para controle de fluxo esperado

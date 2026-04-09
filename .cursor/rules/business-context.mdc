@@ -1,0 +1,57 @@
+---
+description: Contexto de negócio do Korp — o que o sistema faz e para quem
+alwaysApply: true
+---
+
+# Contexto de negócio
+
+## Sistema e empresa
+
+- **Sistema**: emissão e controle de **Notas Fiscais** digitais, com **estoque de produtos** integrado.
+- **Empresa (marca do produto)**: **Korp ERP** (by Viasoft) — software ERP corporativo.
+- **Contexto do repositório**: **teste técnico** para vaga de **estágio**.
+
+## Objetivo
+
+Permitir que uma empresa **emita** e **controle** suas notas fiscais digitalmente, mantendo o **saldo de estoque** coerente com o que foi consumido nas notas.
+
+## Quem usa (atores)
+
+- **Usuário interno** da empresa (operador/atendente), acessando o sistema pelo **navegador** (frontend).
+
+## Funcionalidades principais
+
+### 1. Cadastro de produtos
+
+- **Campos**: código, descrição, saldo (quantidade em estoque).
+- **Objetivo**: manter o catálogo de produtos disponíveis para uso nas notas fiscais.
+
+### 2. Cadastro de notas fiscais
+
+- **Campos**: numeração **sequencial** (gerada pelo sistema), **status** (Aberta / Fechada), lista de itens (produto + quantidade).
+- **Regra**: status inicial **sempre Aberta**.
+
+### 3. Impressão da nota fiscal
+
+- **Efeito de negócio**: **fecha** a nota (Aberta → Fechada).
+- **Estoque**: deduz automaticamente o saldo dos produtos conforme as quantidades da nota (ex.: saldo 10, nota usa 2 → saldo 8).
+- **Validações**: não imprimir se a nota **não** estiver Aberta; não permitir saldo **negativo**.
+- **UX**: exibir indicador de **processamento** durante a operação (pode envolver chamada ao serviço de estoque).
+
+## Regras de negócio críticas
+
+- Uma nota só pode ser **impressa uma vez**; fechar é **irreversível** (não reabrir nota).
+- **Não** adicionar ou alterar itens de nota **Fechada** (alinhado ao fluxo de impressão única).
+- **Saldo nunca negativo** após qualquer operação válida.
+- **Numeração sequencial** da nota: gerada **apenas** pelo sistema (não depender de input manual para “próximo número”).
+
+## Restrições técnicas (escopo do projeto)
+
+- **Arquitetura**: dois **microsserviços** — **Estoque** (produtos e saldos) e **Faturamento** (notas fiscais); o Faturamento **aciona** o Estoque na impressão/fechamento, via **HTTP** (`IHttpClientFactory`). **Sem mensageria** neste escopo (decisão de simplicidade).
+- **Persistência**: **PostgreSQL** com bancos separados por serviço (estoque vs. faturamento), **Entity Framework Core** com migrations.
+- **Frontend**: **Angular**, consumindo as duas APIs via HTTP.
+
+## O que a IA deve priorizar ao codar
+
+- Preservar as regras acima em validações, APIs e integração entre serviços.
+- Tratar falha do microsserviço de estoque como cenário real (indisponibilidade, timeout), sem corromper consistência de negócio.

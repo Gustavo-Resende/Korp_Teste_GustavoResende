@@ -1,0 +1,35 @@
+---
+description: Padrões de uso do Entity Framework Core
+globs:
+  - "**/Infrastructure/**/*.cs"
+---
+
+# Entity Framework Core
+
+## Configuração de entidades
+
+- SEMPRE usar IEntityTypeConfiguration<T> em vez de Data Annotations
+- Arquivos de configuração ficam em Infrastructure/Persistence/Configurations/
+
+## DbContext
+
+- Um DbContext por microsserviço
+- Nome: AppDbContext
+- Registrar no Program.cs com AddDbContext
+
+## Migrations
+
+- Sempre gerar migrations com nome descritivo
+  ex: dotnet ef migrations add AddProdutoTable
+- Aplicar migration automaticamente no startup em desenvolvimento
+
+## Repositórios
+
+- Implementar interfaces definidas na Application
+- Não expor IQueryable para fora do repositório
+- Usar AsNoTracking() em queries de leitura
+
+## Nomenclatura de tabelas
+
+- snake_case no banco: produtos, notas_fiscais, itens_nota
+- Configurar via HasColumnName e ToTable no IEntityTypeConfiguration

@@ -2,6 +2,7 @@
   <Folder Name="/Estoque/">
     <Project Path="Estoque/Estoque.Application/Estoque.Application.csproj" />
     <Project Path="Estoque/Estoque.Domain/Estoque.Domain.csproj" />
+    <Project Path="Estoque/Estoque.Infrastructure/Estoque.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Korp.Shared.csproj" />

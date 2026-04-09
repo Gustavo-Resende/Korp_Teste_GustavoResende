@@ -5,6 +5,9 @@
     <Project Path="Estoque/Estoque.Domain/Estoque.Domain.csproj" />
     <Project Path="Estoque/Estoque.Infrastructure/Estoque.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Faturamento/">
+    <Project Path="Faturamento/Faturamento.Domain/Faturamento.Domain.csproj" />
+  </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Korp.Shared.csproj" />
   </Folder>

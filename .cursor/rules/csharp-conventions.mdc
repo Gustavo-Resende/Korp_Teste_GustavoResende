@@ -17,7 +17,7 @@ globs:
 ## Boas práticas
 
 - Sempre usar async/await — nunca .Result ou .Wait()
-- Sempre passar CancellationToken em métodos async
+- Sempre passar CancellationToken em métodos async; nome do parâmetro: `cancellationToken` (não `ct`)
 - Usar record para DTOs imutáveis
 - Usar var quando o tipo é óbvio
 - Prefira early return a if/else aninhados

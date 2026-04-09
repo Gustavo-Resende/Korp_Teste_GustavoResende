@@ -30,18 +30,18 @@ public class ProdutosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Criar(
         CriarProdutoRequest request,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
-        var result = await _service.CriarAsync(request, ct);
+        var result = await _service.CriarAsync(request, cancellationToken);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value)
             : BadRequest(result.Error);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken ct)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var result = await _service.GetByIdAsync(id, ct);
+        var result = await _service.GetByIdAsync(id, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
     }
 }

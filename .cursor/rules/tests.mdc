@@ -1,0 +1,126 @@
+---
+description: Padrões de testes unitários (xUnit, FluentAssertions, NSubstitute) — Korp
+globs:
+  - "**/*Tests*/**/*.cs"
+  - "**/*.Tests/**/*.cs"
+alwaysApply: false
+---
+
+# Testes unitários — Korp (Estoque / Faturamento)
+
+## Stack
+
+- **xUnit**: framework de execução e atributos `[Fact]`, `[Theory]`, etc.
+- **FluentAssertions**: assertions legíveis (`result.Should().BeSuccess()`, `action.Should().Throw<...>()`).
+- **NSubstitute**: mocks de **interfaces** (`Substitute.For<IProdutoRepository>()`).
+
+Pacotes típicos: `xunit`, `xunit.runner.visualstudio`, `FluentAssertions`, `NSubstitute`, `Microsoft.NET.Test.Sdk`.
+
+## Nomenclatura obrigatória dos métodos de teste
+
+Padrão: **`Metodo_Cenario_ResultadoEsperado`** (PascalCase, underscores entre partes).
+
+Exemplos:
+
+- `CriarProduto_QuandoCodigoJaExiste_DeveRetornarFalha`
+- `DeduzirSaldo_QuandoQuantidadeMaiorQueEstoque_DeveRetornarFalha`
+- `ImprimirNota_QuandoNotaJaFechada_DeveRetornarFalha`
+
+## O que testar (domínio e regras)
+
+### Produto
+
+| Cenário | Resultado esperado |
+|--------|---------------------|
+| Criar produto com dados válidos | Sucesso |
+| Criar produto com código duplicado | Falha |
+| Criar produto com saldo negativo | Falha |
+| Criar produto com descrição vazia | Falha |
+| Deduzir saldo com quantidade válida | Novo saldo correto |
+| Deduzir saldo com quantidade maior que o saldo | Falha |
+| Deduzir saldo com quantidade zero | Falha |
+| Deduzir saldo com quantidade negativa | Falha |
+
+### Nota fiscal
+
+| Cenário | Resultado esperado |
+|--------|---------------------|
+| Criar nota fiscal | Status inicial **Aberta** |
+| Imprimir nota **Aberta** | Status passa a **Fechada** |
+| Imprimir nota já **Fechada** | Falha |
+| Imprimir nota **sem itens** | Falha |
+| Adicionar item a nota **Fechada** | Falha |
+| Numeração sequencial | Gerada pelo sistema (não depender de valor arbitrário do teste sem contrato claro) |
+
+Use `[Theory]` + `[InlineData]` quando vários inputs exercitam a mesma regra.
+
+## Estrutura de um bom teste
+
+- **AAA** (Arrange, Act, Assert), com comentários `// Arrange`, `// Act`, `// Assert` separando as seções.
+- **Um assert conceitual por teste** (uma regra/efeito); se precisar validar duas coisas independentes, divida em dois métodos.
+- **Sem** `if/else/switch` dentro do teste para decidir o que assertar.
+- **Mocks** só para dependências externas: repositórios, clientes HTTP, relógio, etc.
+- **Entidades e value objects do Domain** sem mock: testar comportamento puro (métodos que encapsulam invariantes).
+
+## Exemplo (ProdutoService — NSubstitute + FluentAssertions)
+
+Happy path: criar produto quando repositório confirma que código não existe.
+
+```csharp
+[Fact]
+public async Task CriarAsync_QuandoDadosValidosEDisponiveis_DeveRetornarSucessoComProduto()
+{
+    // Arrange
+    var repository = Substitute.For<IProdutoRepository>();
+    var validator = Substitute.For<IValidator<CriarProdutoCommand>>();
+    var command = new CriarProdutoCommand("P001", "Notebook", 5);
+    var validationResult = new FluentValidation.Results.ValidationResult();
+
+    validator.ValidateAsync(command, Arg.Any<CancellationToken>())
+        .Returns(validationResult);
+
+    repository.ExistsByCodigoAsync("P001", Arg.Any<CancellationToken>())
+        .Returns(false);
+
+    repository.AddAsync(Arg.Any<Produto>(), Arg.Any<CancellationToken>())
+        .Returns(callInfo => Result<Produto>.Success(callInfo.Arg<Produto>()));
+
+    var sut = new ProdutoService(repository, validator);
+
+    // Act
+    var result = await sut.CriarAsync(command, CancellationToken.None);
+
+    // Assert
+    result.IsSuccess.Should().BeTrue();
+    result.Value.Should().NotBeNull();
+    result.Value!.Codigo.Should().Be("P001");
+    await repository.Received(1).AddAsync(Arg.Any<Produto>(), Arg.Any<CancellationToken>());
+}
+```
+
+Edge case: deduzir saldo insuficiente na entidade (exemplo direto no domínio, sem mock).
+
+```csharp
+[Fact]
+public void DeduzirSaldo_QuandoQuantidadeMaiorQueEstoque_DeveRetornarFalha()
+{
+    // Arrange
+    var produto = Produto.Criar("P001", "Mouse", saldoInicial: 3);
+
+    // Act
+    var result = produto.DeduzirSaldo(10);
+
+    // Assert
+    result.IsSuccess.Should().BeFalse();
+    result.Error.Should().Contain("estoque");
+    produto.Saldo.Should().Be(3);
+}
+```
+
+Ajuste nomes de métodos (`DeduzirSaldo`, `ExistsByCodigoAsync`, etc.) para bater com a implementação real do projeto; o padrão de substitutos e assertions permanece.
+
+## O que NÃO cobrir nestes testes de unidade
+
+- **Configuração do EF Core** (mappings, `OnModelCreating`) — teste de integração ou inspeção manual, conforme estratégia do time.
+- **Controllers** — fora do escopo aqui; se necessário, usar testes de integração com `WebApplicationFactory`.
+- **Construtores ou propriedades autoimplementadas sem lógica** — não agregam valor; foque em regras de negócio e orquestração na Application.

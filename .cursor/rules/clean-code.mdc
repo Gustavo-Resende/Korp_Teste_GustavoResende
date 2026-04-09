@@ -1,0 +1,211 @@
+---
+description: SOLID e Clean Code para C# no Korp (Estoque/Faturamento)
+globs:
+  - "**/*.cs"
+alwaysApply: false
+---
+
+# SOLID e Clean Code (C# / .NET)
+
+Regras práticas para microsserviços com Clean Architecture, FluentValidation, `Result<T>` e repositórios.
+
+## SOLID (o que importa aqui)
+
+### SRP — uma responsabilidade por classe
+
+O caso de uso orquestra; validação, persistência e HTTP ficam em colaboradores.
+
+```csharp
+// Ruim: tudo no mesmo tipo
+public class ProdutoService
+{
+    public async Task<Result<Produto>> CriarAsync(...) {
+        if (string.IsNullOrWhiteSpace(nome)) return Result<Produto>.Failure("...");
+        await _http.PostAsync(...); // mistura integração com cadastro
+        await _db.SaveChangesAsync();
+    }
+}
+
+// Melhor: service só orquestra validador + repositório (+ client nomeado se for outro serviço)
+public class ProdutoService
+{
+    public async Task<Result<Produto>> CriarAsync(CriarProdutoCommand cmd, CancellationToken cancellationToken)
+    {
+        var validation = await _validator.ValidateAsync(cmd, cancellationToken);
+        if (!validation.IsValid)
+            return Result<Produto>.Failure(string.Join("; ", validation.Errors));
+
+        return await _repository.AddAsync(cmd.ToEntity(), cancellationToken);
+    }
+}
+```
+
+### OCP — estender sem quebrar o núcleo
+
+Novas regras entram como validators/handlers novos, não editando o validador “monolítico”.
+
+```csharp
+// Novo requisito: regra extra de produto → novo IValidator<CriarProdutoCommand> ou pipeline,
+// sem alterar a assinatura pública do caso de uso.
+```
+
+### DIP — depender de abstrações
+
+Application depende de `IProdutoRepository`; Infrastructure registra a implementação concreta no DI.
+
+```csharp
+// Application — ok
+public class ProdutoService
+{
+    private readonly IProdutoRepository _repository;
+    // ...
+}
+
+// Proibido no Application/Api: injetar ProdutoRepository concreto
+```
+
+### ISP — interfaces pequenas e por domínio
+
+Prefira `IProdutoReadRepository` / `IProdutoWriteRepository` ou operações explícitas (`GetByIdAsync`, `AddAsync`) a uma “interface Deus” com 30 métodos compartilhada por Estoque e Faturamento.
+
+## Clean Code
+
+- **Métodos curtos** (~20 linhas como guia); se crescer, extrair.
+- **Nomes autoexplicativos**: `GetProdutoByIdAsync`, `FecharNotaFiscalAsync`, `DeduzirEstoqueParaItensAsync`.
+- **`CancellationToken`**: parâmetro sempre **`cancellationToken`** (nome completo), não abreviar (`ct`).
+- **Sem código morto**: remover métodos não referenciados; TODO só com ticket/data ou resolver.
+- **Sem comentário óbvio**; comente o *porquê* da regra de negócio, não o que `if (nota.Status == Aberta)` já diz.
+- **Early return** para reduzir aninhamento.
+- **Um nível de abstração por método**: ou monta o fluxo, ou faz detalhe de baixo nível — não os dois no mesmo bloco.
+
+## Slice completo (Produtos — Estoque)
+
+Fluxo ilustrativo: entidade limpa no Domain; contrato e caso de uso na Application; EF na Infrastructure; controller fino na Api.
+
+### Domain
+
+```csharp
+namespace Estoque.Domain.Entities;
+
+public class Produto
+{
+    public int Id { get; private set; }
+    public string Codigo { get; private set; } = null!;
+    public string Descricao { get; private set; } = null!;
+    public int Saldo { get; private set; }
+
+    public static Produto Criar(string codigo, string descricao, int saldoInicial) =>
+        new()
+        {
+            Codigo = codigo,
+            Descricao = descricao,
+            Saldo = saldoInicial
+        };
+}
+```
+
+### Application
+
+```csharp
+namespace Estoque.Application.Abstractions;
+
+public interface IProdutoRepository
+{
+    Task<Result<Produto>> AddAsync(Produto produto, CancellationToken cancellationToken);
+    Task<Result<Produto>> GetByIdAsync(int id, CancellationToken cancellationToken);
+}
+
+namespace Estoque.Application.Produtos;
+
+public record CriarProdutoCommand(string Codigo, string Descricao, int SaldoInicial);
+
+public class ProdutoService
+{
+    private readonly IProdutoRepository _repository;
+    private readonly IValidator<CriarProdutoCommand> _validator;
+
+    public ProdutoService(IProdutoRepository repository, IValidator<CriarProdutoCommand> validator)
+    {
+        _repository = repository;
+        _validator = validator;
+    }
+
+    public async Task<Result<Produto>> CriarAsync(CriarProdutoCommand command, CancellationToken cancellationToken)
+    {
+        var validation = await _validator.ValidateAsync(command, cancellationToken);
+        if (!validation.IsValid)
+            return Result<Produto>.Failure(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage)));
+
+        var entity = Produto.Criar(command.Codigo, command.Descricao, command.SaldoInicial);
+        return await _repository.AddAsync(entity, cancellationToken);
+    }
+
+    public Task<Result<Produto>> ObterPorIdAsync(int id, CancellationToken cancellationToken) =>
+        _repository.GetByIdAsync(id, cancellationToken);
+}
+```
+
+### Infrastructure
+
+```csharp
+namespace Estoque.Infrastructure.Persistence;
+
+public class ProdutoRepository : IProdutoRepository
+{
+    private readonly AppDbContext _db;
+
+    public ProdutoRepository(AppDbContext db) => _db = db;
+
+    public async Task<Result<Produto>> AddAsync(Produto produto, CancellationToken cancellationToken)
+    {
+        _db.Produtos.Add(produto);
+        await _db.SaveChangesAsync(cancellationToken);
+        return Result<Produto>.Success(produto);
+    }
+
+    public async Task<Result<Produto>> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        var produto = await _db.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return produto is null
+            ? Result<Produto>.Failure("Produto não encontrado.")
+            : Result<Produto>.Success(produto);
+    }
+}
+```
+
+### Api
+
+```csharp
+namespace Estoque.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ProdutosController : ControllerBase
+{
+    private readonly ProdutoService _produtoService;
+
+    public ProdutosController(ProdutoService produtoService) => _produtoService = produtoService;
+
+    [HttpPost]
+    public async Task<IActionResult> Criar([FromBody] CriarProdutoCommand request, CancellationToken cancellationToken)
+    {
+        var result = await _produtoService.CriarAsync(request, cancellationToken);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
+            : BadRequest(result.Error);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    {
+        var result = await _produtoService.ObterPorIdAsync(id, cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
+    }
+}
+```
+
+O controller **só delega** ao service e mapeia `Result<T>` para `IActionResult`.
+
+## Faturamento (ligação rápida)
+
+Para **Notas Fiscais**, o mesmo padrão: `NotaFiscalService` orquestra validação + `INotaFiscalRepository`; na **impressão/fechamento**, chama o `IHttpClientFactory` (cliente Estoque) em classe dedicada (ex.: `IEstoqueApiClient`) — não misturar serialização HTTP dentro do mesmo método que persiste a nota sem extração.

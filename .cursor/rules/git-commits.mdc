@@ -1,0 +1,79 @@
+---
+description: Convenções de commits Git — Conventional Commits em pt-BR (Korp)
+alwaysApply: true
+---
+
+# Commits Git — histórico do projeto Korp
+
+## Padrão de mensagem (Conventional Commits adaptado)
+
+Formato: **`tipo(escopo): descrição curta em português`**
+
+Quando não couber escopo (ex.: só documentação geral), use **`tipo: descrição`** sem parênteses.
+
+Exemplos:
+
+- `feat(estoque): adiciona endpoint de cadastro de produto`
+- `feat(faturamento): implementa impressão de nota fiscal`
+- `fix(estoque): corrige dedução de saldo ao imprimir nota`
+- `chore(infra): adiciona docker-compose com PostgreSQL`
+- `test(estoque): adiciona testes de edge case do domínio Produto`
+- `refactor(faturamento): extrai lógica de validação para ProdutoService`
+- `docs: adiciona README com instruções de execução`
+
+## Tipos permitidos
+
+| Tipo | Uso |
+|------|-----|
+| `feat` | Nova funcionalidade |
+| `fix` | Correção de bug |
+| `test` | Adição ou correção de testes |
+| `refactor` | Melhoria de código sem mudança de comportamento observável |
+| `chore` | Configuração, infraestrutura, dependências |
+| `docs` | Documentação |
+
+## Escopos do projeto
+
+Use um destes quando fizer sentido:
+
+- `estoque`
+- `faturamento`
+- `frontend`
+- `infra`
+- `shared`
+
+## Quando commitar
+
+**Proibido:**
+
+- Commitar código que **não compila**
+- Commitar implementação **pela metade** (deixar feature quebrada ou incompleta no `main`/branch compartilhada)
+
+**Sugestão de marcos** (um commit ou conjunto coerente ao terminar cada etapa):
+
+- [ ] Estrutura inicial do projeto (pastas, sln, csproj)
+- [ ] Configuração do Docker e banco de dados
+- [ ] Entidades do Domain (Produto, NotaFiscal, ItemNota)
+- [ ] Interfaces e DTOs da Application
+- [ ] Implementação dos repositórios (Infrastructure)
+- [ ] Cada endpoint/controller concluído e testado manualmente
+- [ ] Testes unitários do domínio
+- [ ] Comunicação entre microsserviços (HttpClient)
+- [ ] Cenário de falha implementado
+- [ ] README final
+
+## Qualidade da mensagem
+
+- **Imperativo** na descrição: "adiciona", "corrige", "implementa" — não "adicionado", "adicionei", "corrigindo"
+- **Primeira linha** com no máximo **72 caracteres**
+- **Corpo opcional**: se precisar explicar o *porquê*, deixe uma **linha em branco** após o título e escreva o texto abaixo
+- **Um commit = uma responsabilidade**: não misturar `feat` com `fix` no mesmo commit; não misturar alterações não relacionadas
+
+## Exemplo com corpo explicativo
+
+```
+fix(faturamento): trata falha quando Estoque está indisponível
+
+Sem esse tratamento a exception estourava sem feedback ao usuário.
+Agora retorna 503 com mensagem clara para o frontend exibir.
+```

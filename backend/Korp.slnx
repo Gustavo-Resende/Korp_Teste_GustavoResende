@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Estoque/">
+    <Project Path="Estoque/Estoque.Domain/Estoque.Domain.csproj" />
+  </Folder>
   <Folder Name="/shared/">
     <Project Path="shared/Korp.Shared.csproj" />
   </Folder>

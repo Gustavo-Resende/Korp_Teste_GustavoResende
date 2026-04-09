@@ -14,4 +14,7 @@
   <Folder Name="/shared/">
     <Project Path="shared/Korp.Shared.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Korp.Tests/Korp.Tests.csproj" />
+  </Folder>
 </Solution>

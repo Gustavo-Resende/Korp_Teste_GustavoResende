@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/Shared/">
+    <Project Path="src/Korp.Shared/Korp.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Estoque/">
+    <Project Path="src/Estoque/Estoque.Api/Estoque.Api.csproj" />
+    <Project Path="src/Estoque/Estoque.Application/Estoque.Application.csproj" />
+    <Project Path="src/Estoque/Estoque.Domain/Estoque.Domain.csproj" />
+    <Project Path="src/Estoque/Estoque.Infrastructure/Estoque.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Faturamento/">
+    <Project Path="src/Faturamento/Faturamento.Api/Faturamento.Api.csproj" />
+    <Project Path="src/Faturamento/Faturamento.Application/Faturamento.Application.csproj" />
+    <Project Path="src/Faturamento/Faturamento.Domain/Faturamento.Domain.csproj" />
+    <Project Path="src/Faturamento/Faturamento.Infrastructure/Faturamento.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Korp.Tests/Korp.Tests.csproj" />
+  </Folder>
+</Solution>

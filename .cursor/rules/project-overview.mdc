@@ -32,4 +32,4 @@ com gerenciamento de estoque de produtos.
 ## Repositório
 
 - Nome: Korp_Teste_GustavoResende
-- Monorepo com pastas separadas por serviço
+- Monorepo: `src/Estoque/` (microsserviço Estoque), `src/Faturamento/` (microsserviço Faturamento), `src/Korp.Shared/`, testes em `Korp.Tests/`, solution na raiz (`Korp.sln` / `Korp.slnx`)

@@ -1,14 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Faturamento.Domain\Faturamento.Domain.csproj" />
-    <ProjectReference Include="..\..\shared\Korp.Shared.csproj" />
+    <ProjectReference Include="..\Estoque.Domain\Estoque.Domain.csproj" />
+    <ProjectReference Include="..\..\Korp.Shared\Korp.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\shared\Korp.Shared.csproj" />
+    <ProjectReference Include="..\..\Korp.Shared\Korp.Shared.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

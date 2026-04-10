@@ -23,10 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Estoque\Estoque.Domain\Estoque.Domain.csproj" />
-    <ProjectReference Include="..\..\Estoque\Estoque.Application\Estoque.Application.csproj" />
-    <ProjectReference Include="..\..\Faturamento\Faturamento.Domain\Faturamento.Domain.csproj" />
-    <ProjectReference Include="..\..\Faturamento\Faturamento.Application\Faturamento.Application.csproj" />
+    <ProjectReference Include="..\src\Estoque\Estoque.Domain\Estoque.Domain.csproj" />
+    <ProjectReference Include="..\src\Estoque\Estoque.Application\Estoque.Application.csproj" />
+    <ProjectReference Include="..\src\Faturamento\Faturamento.Domain\Faturamento.Domain.csproj" />
+    <ProjectReference Include="..\src\Faturamento\Faturamento.Application\Faturamento.Application.csproj" />
   </ItemGroup>
 
 </Project>

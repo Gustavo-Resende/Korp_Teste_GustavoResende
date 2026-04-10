@@ -22,23 +22,23 @@ docker compose up -d
 
 ## Executar as APIs
 
-Em terminais separados, a partir da pasta `backend/`:
+Em terminais separados, na **raiz do repositório**:
 
 ```bash
-dotnet run --project Estoque/Estoque.Api/Estoque.Api.csproj --launch-profile http
+dotnet run --project src/Estoque/Estoque.Api/Estoque.Api.csproj --launch-profile http
 ```
 
 - Swagger Estoque: http://localhost:5001/swagger
 
 ```bash
-dotnet run --project Faturamento/Faturamento.Api/Faturamento.Api.csproj --launch-profile http
+dotnet run --project src/Faturamento/Faturamento.Api/Faturamento.Api.csproj --launch-profile http
 ```
 
 - Swagger Faturamento: http://localhost:5002/swagger
 
 Em **Development**, as migrations do EF Core são aplicadas automaticamente na subida da API (veja `Program.cs` de cada serviço).
 
-A URL da API de estoque consumida pelo Faturamento está em `Faturamento.Api/appsettings.json` → `Services:Estoque` (`http://localhost:5001`). Suba **sempre o Estoque antes** do Faturamento ao testar impressão.
+A URL da API de estoque consumida pelo Faturamento está em `src/Faturamento/Faturamento.Api/appsettings.json` → `Services:Estoque` (`http://localhost:5001`). Suba **sempre o Estoque antes** do Faturamento ao testar impressão.
 
 ## Fluxo sugerido (Swagger)
 
@@ -50,14 +50,18 @@ A URL da API de estoque consumida pelo Faturamento está em `Faturamento.Api/app
 
 ## Testes
 
+Na raiz do repositório:
+
 ```bash
-cd backend
-dotnet test Korp.slnx
+dotnet test Korp.sln
 ```
+
+(Alternativa: `dotnet test Korp.slnx`.)
 
 ## Solução .NET
 
-Arquivo da solution: `backend/Korp.slnx`.
+- **Visual Studio**: abra [`Korp.sln`](Korp.sln) na raiz — inclui pastas de solução (Estoque, Faturamento, Shared, Tests) e **Solution Items** (`docker-compose.yml`, `README.md`, script SQL de init).
+- **CLI / Rider / VS Code**: [`Korp.sln`](Korp.sln) ou [`Korp.slnx`](Korp.slnx). Microsserviços em [`src/Estoque/`](src/Estoque/) e [`src/Faturamento/`](src/Faturamento/), compartilhado em [`src/Korp.Shared/`](src/Korp.Shared/); testes em [`Korp.Tests/`](Korp.Tests/).
 
 ## Evoluções opcionais (não implementadas aqui)
 
